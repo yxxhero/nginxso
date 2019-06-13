@@ -1,8 +1,14 @@
 #!/usr/bin/env python3
 from pyquery import PyQuery as pq
+from utils.nginx_module_page_helper import get_nginx_modules
+from utils.log_helper import logger
+import requests
 
 nginx_doc_url = "http://nginx.org/en/docs/"
-d = pq(url=nginx_doc_url)
-nginx_module_location = d("center").filter(lambda i, this: pq(this).children('h4').text() == 'Modules reference')
-module_uris = [item.attr("href") for item in nginx_module_location.nextAll("ul").find("a").items()]
-print(module_uris)
+requests_timeout = 5
+
+
+if __name__ == "__main__":
+    logger.info("Start get url {}".format(nginx_doc_url))
+    nginx_module_page_html = requests.get(nginx_doc_url, timeout=requests_timeout).text
+    print(get_nginx_modules(nginx_module_page_html))
