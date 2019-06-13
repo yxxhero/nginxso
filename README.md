@@ -1,2 +1,2 @@
 # nginxso
-nginx direct search
+nginx direct search by python3
