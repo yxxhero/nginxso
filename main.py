@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-from pyquery import PyQuery as pq
-from utils.nginx_module_page_helper import get_nginx_modules
-from utils.log_helper import logger
 import requests
+from pyquery import PyQuery as pq
+
+from utils.log_helper import logger
+from utils.nginx_module_page_helper import get_nginx_modules
 
 nginx_doc_url = "http://nginx.org/en/docs/"
 requests_timeout = 5
