@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 import requests
-from pyquery import PyQuery as pq
+import time
 
 from utils.log_helper import logger
+from utils.nginx_module_menu_helper import get_modules_menu
 from utils.nginx_module_page_helper import get_nginx_modules
 
 nginx_doc_url = "http://nginx.org/en/docs/"
 requests_timeout = 5
+retain_keyword = ["summary", "issues", "example", "directives", "variables", "commands", 'data', 'compatibility', 'properties']
 
 
 if __name__ == "__main__":
@@ -16,4 +18,6 @@ if __name__ == "__main__":
     for item in nginx_module_origin_info:
         module_name = item.split("/")[-1].split(".")[0]
         if module_name.startswith("ngx_"):
-            print(module_name)
+            print(get_modules_menu(nginx_doc_url + item))
+            time.sleep(3)
+
