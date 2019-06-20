@@ -62,7 +62,7 @@ def get_modules_variables(vars_location):
         elif item.is_("p") and item.text():
             vars_info["summary"] += item.text()
         elif item.is_("dl"):
-            vars_info["variables"], vars_info["var_names"] = get_variable_key_value(item)
+            vars_info["variables_info"], vars_info["var_names"] = get_variable_key_value(item)
         elif is_menu_item(item):
             break
 

@@ -21,17 +21,25 @@ direct_retain_keyword = ["arguments", "summary", "issues", "example", "directive
 
 if __name__ == "__main__":
     logger.info("Start get url {}".format(nginx_doc_url))
-    nginx_module_page_html = requests.get(
+
+    nginx_module_index_page_html = requests.get(
         nginx_doc_url, timeout=requests_timeout).text
-    nginx_module_origin_info = get_nginx_modules(nginx_module_page_html)
+
+    nginx_module_origin_info = get_nginx_modules(nginx_module_index_page_html)
+
+    # 存储变量和配置名称的相关数据，为搜索添加数据支撑
+    keyword_info = []
+
     for item in nginx_module_origin_info:
         module_name = item.split("/")[-1].split(".")[0]
         if module_name.startswith("ngx_") and "http_api" not in module_name:
             # 初始化菜单结构
-            nginx_module_info = {"module_name": module_name, "directive_info": []}
+            nginx_module_info = {
+                "module_name": module_name, "directive_info": []}
 
             # 获取具体模块的html内容
-            nginx_module_content = requests.get(nginx_doc_url + item, timeout=requests_timeout).text
+            nginx_module_content = requests.get(
+                nginx_doc_url + item, timeout=requests_timeout).text
 
             # 根据获取的模块页面的导航内容初始化模块详情的json结构
             for direct in get_modules_menu(nginx_module_content):
@@ -42,19 +50,29 @@ if __name__ == "__main__":
                         else:
                             nginx_module_info[direct] = ""
                 else:
+                    # 不在保留字中即为具体指令名称
                     nginx_module_info["directives"].append(direct)
+                    for i in nginx_module_info["directives"]:
+                        keyword_info.append({"keyword": i, "module_name": module_name})
 
-            variable_info = get_nginx_module_variable_location(nginx_module_content)
+            variable_info = get_nginx_module_variable_location(
+                nginx_module_content)
             if variable_info:
-                nginx_module_info["variables"] = get_modules_variables(variable_info)
+                nginx_module_info["variables"] = get_modules_variables(
+                    variable_info)
+                for j in nginx_module_info["variables"]["var_names"]:
+                    keyword_info.append({"keyword": j, "module_name": module_name})
 
             # 获取具体模块的a标签的位置
             for module_item in get_nginx_module_item_location(nginx_doc_url + item).items():
                 module_item_name = get_menu_name(module_item)
                 if module_item_name not in ["directives", "variables"] and module_item_name in direct_retain_keyword:
-                    nginx_module_info[module_item_name] = common_menu_context_pickup(module_item)
+                    nginx_module_info[module_item_name] = common_menu_context_pickup(
+                        module_item)
                 elif module_item_name not in direct_retain_keyword:
-                    nginx_module_info["directive_info"].append({"direct_name": module_item_name, "direct_desc": common_direct_context_pickup(module_item) })
+                    nginx_module_info["directive_info"].append(
+                        {"direct_name": module_item_name, "direct_desc": common_direct_context_pickup(module_item)})
 
             print(nginx_module_info)
         time.sleep(requests_interval)
+    print(keyword_info)
