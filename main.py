@@ -5,7 +5,7 @@ import requests
 
 from utils.log_helper import logger
 from utils.nginx_module_menu_helper import get_modules_menu
-from utils.nginx_module_page_analyse import common_menu_context_pickup
+from utils.nginx_module_page_analyse import common_menu_context_pickup, common_direct_context_pickup
 from utils.nginx_module_page_helper import (get_menu_name,
                                             get_modules_variables,
                                             get_nginx_module_item_location,
@@ -28,7 +28,7 @@ if __name__ == "__main__":
         module_name = item.split("/")[-1].split(".")[0]
         if module_name.startswith("ngx_") and "http_api" not in module_name:
             # 初始化菜单结构
-            nginx_module_info = {"module_name": module_name}
+            nginx_module_info = {"module_name": module_name, "directive_info": []}
 
             # 获取具体模块的html内容
             nginx_module_content = requests.get(nginx_doc_url + item, timeout=requests_timeout).text
@@ -54,7 +54,7 @@ if __name__ == "__main__":
                 if module_item_name not in ["directives", "variables"] and module_item_name in direct_retain_keyword:
                     nginx_module_info[module_item_name] = common_menu_context_pickup(module_item)
                 elif module_item_name not in direct_retain_keyword:
-                    print("directives")
+                    nginx_module_info["directive_info"].append({"direct_name": module_item_name, "direct_desc": common_direct_context_pickup(module_item) })
 
             print(nginx_module_info)
         time.sleep(requests_interval)
