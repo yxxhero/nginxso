@@ -15,6 +15,7 @@ from utils.nginx_module_page_helper import (get_menu_name,
 nginx_doc_url = "http://nginx.org/en/docs/"
 requests_timeout = 10
 requests_interval = 10
+requests_retry = 3
 direct_retain_keyword = ["arguments", "summary", "issues", "example", "directives", "compatibility",
                          "definitions", "protocol", "variables", "commands", 'data', 'compatibility', 'properties']
 
@@ -22,8 +23,20 @@ direct_retain_keyword = ["arguments", "summary", "issues", "example", "directive
 if __name__ == "__main__":
     logger.info("Start get url {}".format(nginx_doc_url))
 
-    nginx_module_index_page_html = requests.get(
-        nginx_doc_url, timeout=requests_timeout).text
+    for i in range(requests_retry):
+        try:
+            nginx_module_index_page_html = requests.get(
+                nginx_doc_url, timeout=requests_timeout).text
+        except Exception as e:
+            logger.error("get content for {} faild, reason: {}".format(
+                nginx_doc_url, str(e)))
+            if i == requests_retry - 1:
+                logger.error("get content for {} faild and exceed {}".format(
+                    nginx_doc_url, requests_retry))
+                exit(1)
+        else:
+            logger.info("get content for {} success!!".format(nginx_doc_url))
+            break
 
     nginx_module_origin_info = get_nginx_modules(nginx_module_index_page_html)
 
@@ -38,8 +51,21 @@ if __name__ == "__main__":
                 "module_name": module_name, "directive_info": []}
 
             # 获取具体模块的html内容
-            nginx_module_content = requests.get(
-                nginx_doc_url + item, timeout=requests_timeout).text
+            for i in range(requests_retry):
+                try:
+                    nginx_module_content = requests.get(
+                        nginx_doc_url + item, timeout=requests_timeout).text
+                except Exception as e:
+                    logger.error("get content for {} faild, reason: {}".format(
+                        nginx_doc_url + item, str(e)))
+                    if i == requests_retry - 1:
+                        logger.error("get content for {} faild and exceed {}".format(
+                            nginx_doc_url + item, requests_retry))
+                        exit(1)
+                else:
+                    logger.info("get content for {} success!!".format(
+                        nginx_doc_url + item))
+                    break
 
             # 根据获取的模块页面的导航内容初始化模块详情的json结构
             for direct in get_modules_menu(nginx_module_content):
@@ -53,7 +79,8 @@ if __name__ == "__main__":
                     # 不在保留字中即为具体指令名称
                     nginx_module_info["directives"].append(direct)
                     for i in nginx_module_info["directives"]:
-                        keyword_info.append({"keyword": i, "module_name": module_name})
+                        keyword_info.append(
+                            {"keyword": i, "module_name": module_name})
 
             variable_info = get_nginx_module_variable_location(
                 nginx_module_content)
@@ -61,7 +88,8 @@ if __name__ == "__main__":
                 nginx_module_info["variables"] = get_modules_variables(
                     variable_info)
                 for j in nginx_module_info["variables"]["var_names"]:
-                    keyword_info.append({"keyword": j, "module_name": module_name})
+                    keyword_info.append(
+                        {"keyword": j, "module_name": module_name})
 
             # 获取具体模块的a标签的位置
             for module_item in get_nginx_module_item_location(nginx_doc_url + item).items():
