@@ -17,7 +17,7 @@ nginx_doc_url = "http://nginx.org/en/docs/"
 requests_timeout = 10
 requests_interval = 10
 requests_retry = 3
-direct_retain_keyword = ["arguments", "summary", "issues", "example", "directives", "compatibility",
+direct_retain_keyword = ["endpoints", "arguments", "summary", "issues", "example", "directives", "compatibility",
                          "definitions", "protocol", "variables", "commands", 'data', 'compatibility', 'properties']
 
 
