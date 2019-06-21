@@ -5,7 +5,8 @@ import requests
 
 from utils.log_helper import logger
 from utils.nginx_module_menu_helper import get_modules_menu
-from utils.nginx_module_page_analyse import common_menu_context_pickup, common_direct_context_pickup
+from utils.nginx_module_page_analyse import (common_direct_context_pickup,
+                                             common_menu_context_pickup)
 from utils.nginx_module_page_helper import (get_menu_name,
                                             get_modules_variables,
                                             get_nginx_module_item_location,
