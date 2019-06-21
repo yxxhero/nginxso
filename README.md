@@ -9,3 +9,7 @@ nginx direct search by python3
 * directives
 * variables
 
+# es config
+--- 
+https://www.elastic.co/guide/en/elasticsearch/reference/current/docker.html 
+
