@@ -94,10 +94,10 @@ class ElasticSearch(object):
             logger.info(hit['_source']['date'], hit['_source']['source'], hit['_source']
                         ['link'], hit['_source']['keyword'], hit['_source']['title'])
 
-    def get_data_by_body(self, index_name, query_body=None, index_type="_doc"):
+    def get_data_by_body(self, index_name, query_body=None):
         if not query_body:
-            doc = {'query': {'match_all': {}}}
-        return self.es.search(index=index_name, doc_type=index_type, body=doc)
+            query_body = {'query': {'match_all': {}}}
+        return self.es.search(index=index_name, body=query_body)
 
 
 if __name__ == "__main__":
