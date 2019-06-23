@@ -1,5 +1,6 @@
 from pyquery import PyQuery as pq
 from utils.tools import is_menu_item
+from utils.log_helper import logger
 
 
 class NginxBase(object):
@@ -13,6 +14,7 @@ class NginxPage(NginxBase):
     def get_module_names(self):
 
         # 获取nginx的所有模块
+        logger.info("获取所有模块页面列表") 
         nginx_module_locations = self.d("center").filter(lambda i, this: pq(
             this).children('h4').text() == 'Modules reference')
         return [item.attr("href") for item in nginx_module_locations.nextAll("ul").find("a").items()]
@@ -28,6 +30,7 @@ class NginxModulePage(NginxBase):
 
         # 获取每个菜单指令的a标签，方便定位操作
 
+        logger.info("获取每个菜单指令的a标签，方便定位操作") 
         nginx_module_item = self.d("a").filter(
             lambda i, this: pq(this).attr("name") is not None)
         return nginx_module_item
@@ -35,6 +38,7 @@ class NginxModulePage(NginxBase):
     def get_module_variable_location(self):
 
         # 获取variables指令的a标签，方便定位操作
+        logger.info("获取variables指令的a标签，方便定位操作") 
         nginx_module_variable_info = self.d("a").filter(
             lambda i, this: pq(this).attr("name") == "variables")
         return nginx_module_variable_info

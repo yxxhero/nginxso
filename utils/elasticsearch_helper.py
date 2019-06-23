@@ -1,81 +1,48 @@
-import os
-import time
-from datetime import datetime
 from elasticsearch import Elasticsearch
 from elasticsearch.helpers import bulk
 from utils.log_helper import logger
+from utils.config import get_config
 
 
 class ElasticSearch(object):
-    def __init__(self, index_name, index_type, ip, user_name=None, user_pass=None, port=9200):
+    def __init__(self, ips, port=9200, user_name=None, user_pass=None):
         '''
 
-        :param index_name: 索引名称
-        :param index_type: 索引类型
-        :param ip: a list of host 
+        :param ip: a list of host
         :param user_name: es用户名
         :param user_pass: es密码
         '''
-        self.index_name = index_name
-        self.index_type = index_type
+        self.ips = ips.split(",")
 
         if all([user_name, user_pass]):
-            self.es = Elasticsearch(ip, http_auth=(
+            self.es = Elasticsearch(self.ips, http_auth=(
                 user_name, user_pass), port=port)
         else:
-            self.es = Elasticsearch(ip, port)
+            self.es = Elasticsearch(self.ips, port=port)
 
-    def create_index(self, index_name, index_type, map_body):
+    def create_index(self, index_name, map_body):
 
-        # 创建映射
-        # _index_mappings = {
-        #     "mappings": {
-        #         self.index_type: {
-        #             "properties": {
-        #                 "title": {
-        #                     "type": "text",
-        #                     "index": True,
-        #                     "analyzer": "ik_max_word",
-        #                     "search_analyzer": "ik_max_word"
-        #                 },
-        #                 "date": {
-        #                     "type": "text",
-        #                     "index": True
-        #                 },
-        #                 "keyword": {
-        #                     "type": "string",
-        #                     "index": "not_analyzed"
-        #                 },
-        #                 "source": {
-        #                     "type": "string",
-        #                     "index": "not_analyzed"
-        #                 },
-        #                 "link": {
-        #                     "type": "string",
-        #                     "index": "not_analyzed"
-        #                 }
-        #             }
-        #         }
-
-        #     }
-        # }
-
-        if not self.es.indices.exists(index=self.index_name):
+        if not self.es.indices.exists(index=index_name):
             res = self.es.indices.create(
-                index=self.index_name, body=map_body)
-            logge.info(res)
+                index=index_name, body=map_body)
+            logger.info(res)
 
-    def insert_index_data(self, index_data):
+    def delete_index(self, index_name):
+
+        # 删除索引
+        if self.es.indices.exists(index=index_name):
+            self.es.indices.delete(index=index_name)
+            logger.info("删除索引{}成功".format(index_name))
+
+    def insert_one_index_data(self, index_name, index_data, index_type="_doc"):
         '''
         数据存储到es
         :return:
         '''
-        for item in index_data:
-            res = self.es.index(index=self.index_name,
-                                doc_type=self.index_type, body=item)
-            logger.info(res['created'])
+        res = self.es.index(index=index_name, doc_type=index_type, body=index_data)
+        logger.info(res)
 
-    def bulk_insert_index_data(self, mul_index_data):
+    def insert_mul_index_data(self, index_name, mul_index_data, index_type="_doc"):
         '''
         用bulk将批量数据存储到es
         :return:
@@ -83,57 +50,56 @@ class ElasticSearch(object):
         ACTIONS = []
         for line in mul_index_data:
             action = {
-                "_index": self.index_name,
-                "_type": self.index_type,
-                "_source": {
-                    "date": line['date'],
-                    "source": line['source'].decode('utf8'),
-                    "link": line['link'],
-                    "keyword": line['keyword'].decode('utf8'),
-                    "title": line['title'].decode('utf8')}
+                "_index": index_name,
+                "_type": index_type,
+                "_source": line
             }
             ACTIONS.append(action)
-            # 批量处理
+        # 批量处理
         success, _ = bulk(self.es, ACTIONS,
-                          index=self.index_name, raise_on_error=True)
+                          index=index_name, raise_on_error=True)
         logger.info('Performed %d actions' % success)
 
-    def delete_index_data(self, id):
+    def delete_index_data_by_id(self, index_name, id, index_type="_doc"):
         '''
         删除索引中的一条
         :param id:
         :return:
         '''
-        res = self.es.delete(index=self.index_name,
-                             doc_type=self.index_type, id=id)
-        logger.info res
+        res = self.es.delete(index=index_name,
+                             doc_type=index_type, id=id)
+        logger.info(res)
 
-    def get_data_id(self, id):
+    def delete_index_data_by_query(self, index_name, query_body):
+        '''
+        删除query_body查询出的所有内容
+        :param index_name: index_name
+        :param index_type: index_type
+        :param query_body: es query
+        :return:
+        '''
+        res = self.es.delete_by_query(index=index_name, body=query_body)
+        logger.info(res)
 
-        res = self.es.get(index=self.index_name,
-                          doc_type=self.index_type, id=id)
-        (res['_source'])
+    def get_data_by_id(self, index_name, id, index_type="_doc"):
 
-        logger.info '------------------------------------------------------------------'
-        #
-        # # 输出查询到的结果
+        res = self.es.get(index=index_name,
+                          doc_type=index_type, id=id)
+
+        logger.info(res['_source'])
+
+        # 输出查询到的结果
         for hit in res['hits']['hits']:
             # logger.info hit['_source']
-            logger.info hit['_source']['date'], hit['_source']['source'], hit['_source']['link'], hit['_source']['keyword'], hit['_source']['title']
+            logger.info(hit['_source']['date'], hit['_source']['source'], hit['_source']
+                        ['link'], hit['_source']['keyword'], hit['_source']['title'])
 
-    def get_data_by_body(self):
-        # doc = {'query': {'match_all': {}}}
-        doc = {
-            "query": {
-                "match": {
-                    "keyword": "电视"
-                }
-            }
-        }
-        _searched = self.es.search(
-            index=self.index_name, doc_type=self.index_type, body=doc)
+    def get_data_by_body(self, index_name, query_body=None, index_type="_doc"):
+        if not query_body:
+            doc = {'query': {'match_all': {}}}
+        return self.es.search(index=index_name, doc_type=index_type, body=doc)
 
-        for hit in _searched['hits']['hits']:
-            # logger.info hit['_source']
-            logger.info hit['_source']['date'], hit['_source']['source'], hit['_source']['link'], hit['_source']['keyword'], \
-                hit['_source']['title']
+
+if __name__ == "__main__":
+    es_ins = ElasticSearch("test", "test", get_config(
+        "elasticsearch", "ips"), get_config("elasticsearch", "port"))
