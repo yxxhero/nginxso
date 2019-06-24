@@ -86,7 +86,8 @@ module_map = {
 def main():
 
     logger.info("初始化es实例")
-    es_ins = ElasticSearch(ips=get_config("elasticsearch", "ips"), port=get_config("elasticsearch", "port"))
+    es_ins = ElasticSearch(ips=get_config(
+        "elasticsearch", "ips"), port=get_config("elasticsearch", "port"))
 
     # 创建es索引
     es_ins.create_index("keyword", keyword_map)
@@ -167,7 +168,7 @@ def main():
     keyword_info.append({
         "keyword": "allkeyword",
         "module_name": allkeyword
-        })
+    })
     es_ins.insert_mul_index_data("keyword", keyword_info)
 
 
