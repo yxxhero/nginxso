@@ -1,8 +1,8 @@
 from fastapi import FastAPI
+from starlette.middleware.cors import CORSMiddleware
 
 from routers import autocomplete, search
 from utils.tools import generate_prefix
-from starlette.middleware.cors import CORSMiddleware
 
 
 app = FastAPI()
