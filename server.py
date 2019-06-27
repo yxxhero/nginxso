@@ -17,14 +17,8 @@ app.add_middleware(
 
 # 导入autocomplete
 app.include_router(
-    autocomplete.router,
-    prefix=generate_prefix("autocompelte"),
-    tags=["autocomplete"]
+    autocomplete.router, prefix=generate_prefix("autocomplete"), tags=["autocomplete"]
 )
 
 # 导入search
-app.include_router(
-    search.router,
-    prefix=generate_prefix("search"),
-    tags=["search"]
-)
+app.include_router(search.router, prefix=generate_prefix("search"), tags=["search"])

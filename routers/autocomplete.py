@@ -11,7 +11,7 @@ router = APIRouter()
 async def autocomplete(keyword: str):
     keyword_query_body = {
         "size": 10000,
-        "query": {"wildcard": {"keyword": "".join(["*", keyword, "*"])}},
+        "query": {"wildcard": {"keyword": "".join(["*", keyword.lower(), "*"])}},
     }
     try:
         es_ins = ElasticSearch(
@@ -29,9 +29,9 @@ async def autocomplete(keyword: str):
         if keywords["hits"]["total"]["value"]:
             return {
                 "code": 0,
-                "data": [
-                    item["_source"]["keyword"] for item in keywords["hits"]["hits"]
-                ],
+                "data": set(
+                    [item["_source"]["keyword"] for item in keywords["hits"]["hits"]]
+                ),
             }
         else:
-            return {"code": 2, "data": [], "msg": "关键词列表为空"}
+            return {"code": 2, "data": [], "msg": "无匹配指令"}
