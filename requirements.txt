@@ -2,5 +2,5 @@ pyquery==1.4.0
 requests==2.20.0
 loguru==0.2.5
 elasticsearch==7.0.2
-fastapi==0.30.0
+fastapi==0.65.2
 uvicorn==0.11.7
